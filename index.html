@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#176b3a">
+  <meta name="description" content="Fresh vegetables from B.Tech Sabzi Wala, Nanak Nagar, Jammu.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>B.Tech Sabzi Wala</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17251b;background:#f5f8f4}
+    *{box-sizing:border-box}body{margin:0;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+    header{background:#176b3a;color:white;padding:22px 18px 18px;border-radius:0 0 22px 22px}
+    header h1{margin:0;font-size:24px}header p{margin:6px 0 0;opacity:.9}
+    main{max-width:760px;margin:auto;padding:16px}
+    .notice{background:#fff4d6;border:1px solid #f0d68b;padding:11px 13px;border-radius:12px;font-size:13px;line-height:1.4;margin-bottom:14px}
+    .toolbar{display:flex;gap:8px;margin:12px 0}.toolbar input{flex:1;min-width:0}
+    input,select,button{font:inherit;border-radius:10px;padding:12px;border:1px solid #d5dfd4;background:white}
+    .products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .product,.panel{background:white;border:1px solid #e1e9df;border-radius:15px;padding:13px}
+    .emoji{font-size:32px}.product h3{margin:5px 0;font-size:16px}.muted{color:#66736a;font-size:13px}
+    .price{font-weight:700;margin:8px 0}.add, .primary{background:#176b3a;color:white;border:0;font-weight:650}
+    .add{width:100%;padding:10px}.panel{margin-top:16px}
+    .line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #edf1ec}
+    .qty button{padding:5px 10px;margin-left:4px}.total{font-size:18px;font-weight:750}
+    .primary{width:100%;margin-top:12px;padding:14px}
+    footer{text-align:center;color:#758078;font-size:12px;padding:20px}
+    @media(min-width:600px){.products{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>🥬 B.Tech Sabzi Wala</h1>
+  <p>Fresh vegetables • Nanak Nagar, Jammu</p>
+</header>
+<main>
+  <div class="notice"><strong>Prototype preview:</strong> Sample products and prices only. Orders are not sent to the shop yet; no live payment or inventory is connected.</div>
+  <div class="toolbar">
+    <input id="search" placeholder="Search vegetables…" aria-label="Search vegetables">
+  </div>
+  <section class="products" id="products"></section>
+  <section class="panel">
+    <h2 style="margin:0 0 8px;font-size:19px">Your basket</h2>
+    <div id="basket"><p class="muted">Your basket is empty.</p></div>
+    <div style="margin-top:12px">
+      <label class="muted" for="fulfilment">Order type</label>
+      <select id="fulfilment" style="width:100%;margin-top:5px">
+        <option value="delivery">Home delivery</option><option value="pickup">Store pickup (free)</option>
+      </select>
+      <label class="muted" for="payment" style="display:block;margin-top:12px">Payment preference</label>
+      <select id="payment" style="width:100%;margin-top:5px">
+        <option>Cash on delivery</option><option>UPI (not live in this prototype)</option>
+      </select>
+    </div>
+    <div id="totals" style="margin-top:12px"></div>
+    <button class="primary" id="checkout">Review demo order</button>
+  </section>
+</main>
+<footer>Delivery within 5 km • ₹20 delivery • Free delivery above ₹499</footer>
+<script>
+const items=[
+ {id:1,name:"Potato",unit:"kg",price:30,emoji:"🥔"},
+ {id:2,name:"Tomato",unit:"kg",price:40,emoji:"🍅"},
+ {id:3,name:"Onion",unit:"kg",price:35,emoji:"🧅"},
+ {id:4,name:"Spinach",unit:"bunch",price:25,emoji:"🥬"},
+ {id:5,name:"Cauliflower",unit:"piece",price:45,emoji:"🥦"},
+ {id:6,name:"Carrot",unit:"kg",price:50,emoji:"🥕"},
+ {id:7,name:"Cucumber",unit:"kg",price:35,emoji:"🥒"},
+ {id:8,name:"Green chilli",unit:"kg",price:60,emoji:"🌶️"}
+];
+const cart={};
+const money=n=>"₹"+n.toFixed(2);
+function renderProducts(){
+ const q=document.getElementById("search").value.toLowerCase();
+ document.getElementById("products").innerHTML=items.filter(x=>x.name.toLowerCase().includes(q)).map(x=>
+ `<article class="product"><div class="emoji">${x.emoji}</div><h3>${x.name}</h3><div class="muted">Per ${x.unit}</div><div class="price">${money(x.price)}</div><button class="add" onclick="add(${x.id})">Add to basket</button></article>`).join("");
+}
+function add(id){cart[id]=(cart[id]||0)+1;renderCart()}
+function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];renderCart()}
+function renderCart(){
+ const rows=items.filter(x=>cart[x.id]).map(x=>`<div class="line"><div>${x.name}<div class="muted">${money(x.price)} / ${x.unit}</div></div><div class="qty"><button onclick="change(${x.id},-1)">−</button> ${cart[x.id]} <button onclick="change(${x.id},1)">+</button></div><strong>${money(x.price*cart[x.id])}</strong></div>`).join("");
+ document.getElementById("basket").innerHTML=rows||'<p class="muted">Your basket is empty.</p>';
+ const subtotal=items.reduce((s,x)=>s+x.price*(cart[x.id]||0),0);
+ const delivery=document.getElementById("fulfilment").value==="pickup"?0:(subtotal===0||subtotal>499?0:20);
+ document.getElementById("totals").innerHTML=`<div class="line"><span>Subtotal</span><strong>${money(subtotal)}</strong></div><div class="line"><span>Delivery</span><strong>${delivery===0?(subtotal>499?"Free (over ₹499)":"Free"):money(delivery)}</strong></div><div class="line total"><span>Total</span><span>${money(subtotal+delivery)}</span></div>`;
+}
+document.getElementById("search").addEventListener("input",renderProducts);
+document.getElementById("fulfilment").addEventListener("change",renderCart);
+document.getElementById("checkout").addEventListener("click",()=>{
+ const count=Object.values(cart).reduce((a,b)=>a+b,0);
+ if(!count){alert("Please add items to your basket first.");return;}
+ alert("Demo only: your basket is ready, but checkout is not connected to a live order system yet.");
+});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));}
+renderProducts();renderCart();
+</script>
+</body>
+</html>
